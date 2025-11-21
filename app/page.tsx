@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio } from "lucide-react";
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio, Loader2 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { upload } from '@vercel/blob/client'; // IMPORT IMPORTANT
+import { upload } from '@vercel/blob/client';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(""); // Pour afficher l'étape en cours
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0); // Pour voir la progression
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -26,59 +27,72 @@ export default function Home() {
       setFile(e.target.files[0]);
       setError("");
       setResult(null);
+      setUploadProgress(0);
       setTimeout(() => scrollToSection('player'), 500);
     }
   };
 
+  // --- LA NOUVELLE LOGIQUE DE POLLING ---
   const cleanAudio = async () => {
     if (!file) return;
     setLoading(true);
     setError("");
     setResult(null);
     setUploadProgress(0);
+    setStatusMessage("Envoi du fichier vers le Cloud...");
 
     try {
-      // ÉTAPE 1 : Upload vers Vercel Blob (Stockage Cloud)
-      // Cela contourne la limite de 4.5Mo du serveur
-      console.log("Début upload Blob...");
+      // 1. Upload Blob
       const newBlob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
-        onUploadProgress: (progressEvent) => {
-           setUploadProgress(progressEvent.percentage);
-        }
+        onUploadProgress: (progressEvent) => setUploadProgress(progressEvent.percentage)
       });
 
-      console.log("Fichier stocké ici :", newBlob.url);
-      setUploadProgress(100);
-
-      // ÉTAPE 2 : Envoi de l'URL à l'IA
-      const response = await fetch("/api/enhance", { 
+      // 2. Lancer l'IA
+      setStatusMessage("Démarrage de l'IA...");
+      const startResponse = await fetch("/api/enhance", { 
         method: "POST", 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileUrl: newBlob.url }) // On envoie l'URL, pas le fichier
+        body: JSON.stringify({ fileUrl: newBlob.url }) 
       });
       
-      const responseText = await response.text();
+      if (!startResponse.ok) throw new Error("Impossible de lancer l'IA");
+      const { id } = await startResponse.json();
 
-      try {
-        const data = JSON.parse(responseText);
-        if (response.ok) {
-          let finalUrl = data.cleanedUrl;
-          if (typeof finalUrl === 'object') finalUrl = JSON.stringify(finalUrl);
-          setResult(finalUrl);
-        } else {
-          setError(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error || "Erreur inconnue");
+      // 3. Boucle d'attente (Polling)
+      setStatusMessage("Traitement en cours (ça peut prendre 1 min)...");
+      
+      let finalOutput = null;
+      while (!finalOutput) {
+        // On attend 2 secondes
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // On demande "C'est fini ?"
+        const checkResponse = await fetch(`/api/enhance?id=${id}`);
+        const statusData = await checkResponse.json();
+
+        if (statusData.status === "succeeded") {
+          finalOutput = statusData.output;
+        } else if (statusData.status === "failed" || statusData.status === "canceled") {
+          throw new Error("L'IA a échoué à traiter ce fichier.");
         }
-      } catch (e) {
-        console.error("Erreur brute:", responseText);
-        setError("Le traitement a pris trop de temps ou le serveur est surchargé.");
+        // Si c'est "starting" ou "processing", on continue la boucle
+      }
+
+      // 4. Résultat
+      if (finalOutput) {
+        let finalUrl = finalOutput;
+        // Conversion si c'est un objet/liste (cas rare avec cette méthode mais on sécurise)
+        if (typeof finalOutput === 'object') finalUrl = Array.isArray(finalOutput) ? finalOutput[0] : finalOutput.audio || finalOutput;
+        setResult(finalUrl);
       }
 
     } catch (err: any) {
+      console.error(err);
       setError("Erreur : " + (err.message || String(err)));
     } finally {
       setLoading(false);
+      setStatusMessage("");
     }
   };
 
@@ -167,19 +181,8 @@ export default function Home() {
             </motion.div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <button 
-                 onClick={() => setShowModal(true)} 
-                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
-              >
-                Connexion
-              </button>
-              <motion.button 
-                layout
-                onClick={() => setShowModal(true)}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
-              >
-                S'inscrire
-              </motion.button>
+              <button onClick={() => setShowModal(true)} className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3">Connexion</button>
+              <motion.button onClick={() => setShowModal(true)} layout className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap">S'inscrire</motion.button>
             </div>
         </motion.nav>
       </div>
@@ -274,16 +277,17 @@ export default function Home() {
                       <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
                       <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
                       
-                      {/* BARRE DE PROGRESSION DE L'UPLOAD */}
+                      {/* Indicateur de progression */}
                       {uploadProgress < 100 ? (
-                         <div className="mt-4 w-48 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden">
-                            <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                         <div className="mt-4">
+                            <div className="w-48 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden">
+                               <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">Envoi: {uploadProgress}%</p>
                          </div>
                       ) : (
-                         <p className="text-slate-500 text-sm mt-2">L'IA analyse et sépare la voix.</p>
+                         <p className="text-slate-500 text-sm mt-2 animate-pulse">{statusMessage || "L'IA travaille..."}</p>
                       )}
-                      
-                      {uploadProgress < 100 && <p className="text-xs text-slate-400 mt-2">Envoi: {uploadProgress}%</p>}
                     </motion.div>
                   )}
 
