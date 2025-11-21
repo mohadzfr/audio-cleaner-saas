@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot } from "lucide-react";
-import { motion, AnimatePresence, useScroll } from "framer-motion";
+import { Upload, Bot, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -11,16 +11,14 @@ export default function Home() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // --- GESTION DU SCROLL ---
+  // --- GESTION DU SCROLL (Optimisée) ---
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    return scrollY.onChange((latest) => {
-      const shouldBeScrolled = latest > 20;
-      if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
-    });
-  }, [scrollY, isScrolled]);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const shouldBeScrolled = latest > 10; // Déclenchement immédiat pour fluidité
+    if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -90,86 +88,112 @@ export default function Home() {
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND NAVBAR (Version Stabilisée & Responsive) --- */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
+      {/* --- DYNAMIC ISLAND (MORPHING FLUIDE) --- */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
         <motion.nav 
-          layout
+          layout // LA CLÉ DU MORPHING
           initial={false}
           animate={isScrolled ? "scrolled" : "top"}
           variants={{
             top: { 
               width: "100%", 
-              maxWidth: "100%",
               marginTop: 0,
               borderRadius: 0,
-              padding: "1rem 1.5rem",
+              paddingTop: "1.5rem",
+              paddingBottom: "1.5rem",
+              paddingLeft: "2rem",
+              paddingRight: "2rem",
               backgroundColor: "rgba(255, 255, 255, 0)",
-              borderBottom: "1px solid rgba(0,0,0,0.0)"
+              borderBottom: "1px solid rgba(0,0,0,0.0)",
+              boxShadow: "0 0 0 0 rgba(0,0,0,0)"
             },
             scrolled: { 
-              width: "92%", // Responsive mobile
-              maxWidth: "500px", // Max sur PC
-              marginTop: 16,
-              borderRadius: 100,
-              padding: "0.75rem 1.25rem",
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(12px)",
-              borderBottom: "1px solid rgba(0,0,0,0.1)",
-              border: "1px solid rgba(0,0,0,0.1)",
-              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
+              width: "92%", // Responsive Mobile
+              maxWidth: "480px", // Responsive Desktop
+              marginTop: 12,
+              borderRadius: 999, // Pillule parfaite
+              paddingTop: "0.75rem",
+              paddingBottom: "0.75rem",
+              paddingLeft: "1.25rem",
+              paddingRight: "1.25rem",
+              backgroundColor: "rgba(255, 255, 255, 0.85)",
+              borderBottom: "1px solid rgba(0,0,0,0.08)",
+              boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)"
             }
           }}
-          // SECRET DE FLUIDITÉ : Stiffness (vitesse) et Damping (freinage) ajustés pour éviter le tremblement
-          transition={{ type: "spring", stiffness: 200, damping: 30, mass: 0.8 }}
-          className="flex items-center justify-between pointer-events-auto overflow-hidden"
+          // Physique de ressort lourde et douce (Apple Style)
+          transition={{ 
+            type: "spring", 
+            stiffness: 120, 
+            damping: 20, 
+            mass: 1 
+          }}
+          className="backdrop-blur-xl flex items-center justify-between pointer-events-auto border border-transparent overflow-hidden"
         >
             {/* LOGO */}
-            <div className="flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
-                <AudioWaveform className="w-5 h-5 text-white" />
-              </div>
-              {/* Sur mobile, on cache le texte AudioFix quand c'est scrollé pour gagner de la place */}
+            <motion.div layout className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+              <motion.div layout className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
+                <AudioWaveform className="w-4 h-4 text-white" />
+              </motion.div>
               <motion.span 
                 layout
-                className={`whitespace-nowrap overflow-hidden text-slate-900 ${isScrolled ? 'hidden sm:block' : 'block'}`}
+                animate={{ 
+                  width: isScrolled ? 0 : "auto", 
+                  opacity: isScrolled ? 0 : 1,
+                  marginRight: isScrolled ? 0 : 10
+                }} 
+                className="whitespace-nowrap overflow-hidden text-slate-900"
               >
                 AudioFix
               </motion.span>
-            </div>
+            </motion.div>
             
-            {/* MENU PC (Caché sur mobile) */}
+            {/* MENU (Disparition fluide) */}
             <motion.div 
               layout
-              animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} 
+              animate={{ 
+                width: isScrolled ? 0 : "auto", 
+                opacity: isScrolled ? 0 : 1,
+                display: isScrolled ? "none" : "flex"
+              }} 
               className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 overflow-hidden"
             >
               <button onClick={() => scrollToSection('upload')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Produit</button>
               <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Tarifs</button>
             </motion.div>
 
-            {/* BOUTONS DROITE */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* FIX MOBILE : Le bouton Connexion disparaît sur petit écran */}
-              <button 
+            {/* ACTION BUTTONS */}
+            <motion.div layout className="flex items-center gap-2 shrink-0">
+              <motion.button 
+                 layout
+                 animate={{ 
+                   width: isScrolled ? 0 : "auto", 
+                   opacity: isScrolled ? 0 : 1, 
+                   display: isScrolled ? "none" : "block",
+                   padding: isScrolled ? 0 : "0 12px"
+                 }}
                  onClick={() => setShowModal(true)} 
-                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
+                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors overflow-hidden whitespace-nowrap hidden sm:block"
               >
                 Connexion
-              </button>
+              </motion.button>
               
               <motion.button 
                 layout
                 onClick={() => setShowModal(true)}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
+                className="px-5 py-2 bg-slate-900 text-white rounded-full font-bold text-sm hover:bg-black transition-colors shadow-sm"
+                whileTap={{ scale: 0.95 }}
               >
-                S'inscrire
+                {isScrolled ? "Essayer" : "S'inscrire"}
               </motion.button>
-            </div>
+            </motion.div>
         </motion.nav>
       </div>
 
       {/* --- HERO SECTION --- */}
       <div className="relative pt-40 pb-32 px-6">
+        
+        {/* --- FOND --- */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
 
