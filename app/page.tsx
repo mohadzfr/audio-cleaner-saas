@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// J'ai ajouté l'import de useMotionValueEvent
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot } from "lucide-react";
+// AJOUT ICI : J'ai importé "Quote" pour la nouvelle section témoignages
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Quote } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
 export default function Home() {
@@ -69,7 +69,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
-      {/* --- MODAL --- */}
+      {/* --- MODAL (MODIFIÉE : SANS L'ICÔNE ÉTOILE) --- */}
       <AnimatePresence>
       {showModal && (
         <motion.div 
@@ -81,18 +81,16 @@ export default function Home() {
              className="bg-white border border-slate-200 p-8 rounded-3xl max-w-sm w-full text-center relative shadow-2xl"
            >
               <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-600 transition-colors"><X className="w-5 h-5" /></button>
-              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900">Accès Pro Bientôt</h3>
-              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation.</p>
+              {/* J'ai retiré le bloc div avec l'icône Sparkles ici */}
+              <h3 className="text-xl font-bold mb-2 text-slate-900 mt-4">Accès Pro Bientôt</h3>
+              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation. Laissez votre email pour être notifié.</p>
               <button onClick={() => setShowModal(false)} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all">Compris</button>
            </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND NAVBAR (Version Corrigée & Fluide) --- */}
+      {/* --- DYNAMIC ISLAND NAVBAR (Version Fluide & Stable) --- */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
           layout
@@ -110,9 +108,8 @@ export default function Home() {
               boxShadow: "none"
             },
             scrolled: { 
-              // Utilisation de calc() pour une largeur plus stable sur mobile
               width: "calc(100% - 2rem)", 
-              maxWidth: "500px", // Max sur PC
+              maxWidth: "500px",
               marginTop: 16,
               borderRadius: 100,
               padding: "0.75rem 1.25rem",
@@ -123,7 +120,6 @@ export default function Home() {
               boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
             }
           }}
-          // Transition "ressort amorti" pour une fluidité maximale sans rebond
           transition={{ type: "spring", stiffness: 200, damping: 30, mass: 0.8 }}
           className="flex items-center justify-between pointer-events-auto overflow-hidden"
         >
@@ -132,7 +128,6 @@ export default function Home() {
               <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
                 <AudioWaveform className="w-5 h-5 text-white" />
               </div>
-              {/* Sur mobile, on cache le texte AudioFix quand c'est scrollé pour gagner de la place */}
               <motion.span 
                 layout
                 className={`whitespace-nowrap overflow-hidden text-slate-900 ${isScrolled ? 'hidden sm:block' : 'block'}`}
@@ -141,7 +136,7 @@ export default function Home() {
               </motion.span>
             </div>
             
-            {/* MENU PC (Caché sur mobile) */}
+            {/* MENU PC */}
             <motion.div 
               layout
               animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} 
@@ -153,7 +148,6 @@ export default function Home() {
 
             {/* BOUTONS DROITE */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* FIX MOBILE : Le bouton Connexion disparaît sur petit écran */}
               <button 
                  onClick={() => setShowModal(true)} 
                  className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
@@ -359,8 +353,42 @@ export default function Home() {
          </div>
       </div>
 
+      {/* --- NOUVELLE SECTION : CONFIANCE / TÉMOIGNAGES --- */}
+      <div className="py-24 px-6 bg-white border-t border-slate-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-12">Ils nous font confiance</h2>
+          <div className="grid md:grid-cols-2 gap-6 text-left">
+            {/* Témoignage 1 */}
+            <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm relative hover:border-blue-200 transition-all">
+              <Quote className="w-10 h-10 text-blue-100 absolute top-6 right-6" />
+              <p className="text-slate-700 mb-6 leading-relaxed text-lg">"C'est bluffant. J'ai sauvé une interview enregistrée dans un café bruyant. Le résultat est digne d'un studio."</p>
+              <div>
+                <div className="font-bold text-slate-900">Thomas L.</div>
+                <div className="text-sm text-blue-600">Podcasteur Indépendant</div>
+              </div>
+            </div>
+            {/* Témoignage 2 */}
+            <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm relative hover:border-blue-200 transition-all">
+              <Quote className="w-10 h-10 text-blue-100 absolute top-6 right-6" />
+              <p className="text-slate-700 mb-6 leading-relaxed text-lg">"Je gagne un temps fou sur le montage de mes vidéos YouTube. L'IA est incroyablement précise et rapide."</p>
+              <div>
+                <div className="font-bold text-slate-900">Sarah M.</div>
+                <div className="text-sm text-blue-600">Créatrice de Contenu</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Badges de confiance supplémentaires (Optionnel mais efficace) */}
+          <div className="mt-16 pt-12 border-t border-slate-100 flex flex-wrap justify-center gap-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            <div className="flex items-center gap-2"><Shield className="w-5 h-5"/> Sécurisé</div>
+            <div className="flex items-center gap-2"><Zap className="w-5 h-5"/> Rapide</div>
+            <div className="flex items-center gap-2"><Bot className="w-5 h-5"/> IA Avancée</div>
+          </div>
+        </div>
+      </div>
+
       <footer className="py-12 text-center border-t border-slate-200 bg-white text-slate-500 text-sm">
-        <p>&copy; 2025 AudioFix AI. Fait avec soin.</p>
+        <p>&copy; 2025 AudioFix AI. Fait avec soin en France.</p>
       </footer>
     </div>
   );
