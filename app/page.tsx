@@ -95,7 +95,6 @@ export default function Home() {
         {/* --- UPLOAD CARD --- */}
         <div className="bg-slate-900/50 border border-slate-800 p-2 rounded-2xl shadow-2xl shadow-indigo-500/10 backdrop-blur-sm max-w-xl mx-auto relative group">
           
-          {/* Glow Effect derrière la boite */}
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
           
           <div className="relative bg-slate-950 rounded-xl p-8 border border-slate-800">
@@ -209,6 +208,51 @@ export default function Home() {
             </div>
             <h3 className="font-bold text-white mb-2">100% Privé</h3>
             <p className="text-slate-400 text-sm">Vos fichiers ne sont pas conservés. Ils sont traités et supprimés automatiquement.</p>
+          </div>
+        </div>
+
+        {/* --- PRICING SECTION --- */}
+        <div id="pricing" className="py-32 text-center">
+          <h2 className="text-4xl font-bold mb-4">Des tarifs simples.</h2>
+          <p className="text-slate-400 mb-16">Commencez gratuitement, passez pro pour la vitesse.</p>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
+            
+            {/* Plan Gratuit */}
+            <div className="p-8 rounded-2xl border border-slate-800 bg-slate-900/20 hover:border-slate-700 transition-colors">
+              <h3 className="text-xl font-bold text-white mb-2">Découverte</h3>
+              <div className="text-3xl font-bold text-white mb-6">0€ <span className="text-sm text-slate-500 font-normal">/mois</span></div>
+              <ul className="space-y-4 mb-8 text-slate-400 text-sm">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> 3 fichiers par jour</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Qualité Standard (MP3)</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Fichiers &lt; 5Mo</li>
+              </ul>
+              <button className="w-full py-3 border border-slate-700 rounded-xl text-white hover:bg-slate-800 transition-colors font-semibold">
+                Utiliser Gratuitement
+              </button>
+            </div>
+
+            {/* Plan PRO */}
+            <div className="relative p-8 rounded-2xl border border-indigo-500 bg-slate-900/50 shadow-2xl shadow-indigo-500/10">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold text-white uppercase tracking-wide">
+                Le plus populaire
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Créateur Pro</h3>
+              <div className="text-3xl font-bold text-white mb-6">9€ <span className="text-sm text-slate-500 font-normal">/mois</span></div>
+              <ul className="space-y-4 mb-8 text-slate-300 text-sm">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> <strong>Illimité</strong></li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Qualité Studio (WAV)</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Fichiers jusqu'à 500Mo</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-400" /> Support Prioritaire</li>
+              </ul>
+              <button 
+                onClick={() => alert("Wow ! Vous voulez payer ? 🤑\n\nC'est ici qu'on branchera Stripe plus tard.\nPour l'instant, c'est gratuit pour toi chef.")}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-white hover:opacity-90 transition-opacity font-bold"
+              >
+                Passer Pro
+              </button>
+            </div>
+
           </div>
         </div>
 
