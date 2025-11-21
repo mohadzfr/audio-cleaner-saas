@@ -17,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     return scrollY.onChange((latest) => {
-      setIsScrolled(latest > 50);
+      setIsScrolled(latest > 20); // Déclenche plus tôt pour éviter le saut
     });
   }, [scrollY]);
 
@@ -63,35 +63,8 @@ export default function Home() {
     }
   };
 
-  // --- CONFIGURATION NAVBAR ---
-  const navVariants = {
-    top: { 
-      width: "100%", 
-      maxWidth: "100%", // Empêche le dépassement sur mobile
-      top: 0, 
-      y: 0,
-      borderRadius: 0, 
-      padding: "1.2rem 1.5rem", 
-      backgroundColor: "rgba(255, 255, 255, 0)", 
-      borderBottom: "1px solid rgba(0,0,0,0.05)",
-      boxShadow: "none"
-    },
-    scrolled: { 
-      width: "92%", 
-      maxWidth: "450px",
-      top: 15,
-      y: 0,
-      borderRadius: "100px", 
-      padding: "0.75rem 1.5rem", 
-      backgroundColor: "rgba(255, 255, 255, 0.9)", 
-      borderBottom: "1px solid rgba(0,0,0,0.1)",
-      border: "1px solid rgba(0,0,0,0.1)",
-      boxShadow: "0 10px 30px -10px rgba(0,0,0,0.08)"
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-500 selection:text-white overflow-x-hidden w-full">
+    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
       {/* --- MODAL --- */}
       <AnimatePresence>
@@ -116,49 +89,84 @@ export default function Home() {
       )}
       </AnimatePresence>
 
-      {/* --- NAVBAR --- */}
-      <motion.nav 
-        initial="top"
-        animate={isScrolled ? "scrolled" : "top"}
-        variants={navVariants}
-        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
-        style={{ position: "fixed", left: "50%", x: "-50%", zIndex: 50, boxSizing: "border-box" }}
-        className="backdrop-blur-xl flex items-center justify-between overflow-hidden"
-      >
-          <div className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-violet-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
-              <AudioWaveform className="w-4 h-4 text-white" />
+      {/* --- DYNAMIC ISLAND CONTAINER (FIX FLUIDITÉ) --- */}
+      {/* Ce conteneur fixe gère le positionnement, l'enfant gère l'animation */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
+        
+        <motion.nav 
+          layout // La clé de la fluidité : Framer Motion calcule la géométrie automatiquement
+          initial={false}
+          animate={isScrolled ? "scrolled" : "top"}
+          variants={{
+            top: { 
+              width: "100%", 
+              marginTop: 0,
+              borderRadius: 0,
+              padding: "1.2rem 2rem",
+              backgroundColor: "rgba(255, 255, 255, 0)",
+              borderBottom: "1px solid rgba(0,0,0,0.05)"
+            },
+            scrolled: { 
+              width: "min(92%, 450px)", // Responsive parfait : 92% sur mobile, max 450px sur PC
+              marginTop: 16,
+              borderRadius: 100,
+              padding: "0.75rem 1.5rem",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              borderBottom: "1px solid rgba(0,0,0,0.1)",
+              border: "1px solid rgba(0,0,0,0.1)",
+              boxShadow: "0 8px 32px -8px rgba(0,0,0,0.1)"
+            }
+          }}
+          transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1 }}
+          className="backdrop-blur-xl flex items-center justify-between overflow-hidden pointer-events-auto"
+        >
+            <div className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
+                <AudioWaveform className="w-4 h-4 text-white" />
+              </div>
+              {/* Texte qui se cache proprement */}
+              <motion.span 
+                layout
+                animate={{ width: isScrolled ? 0 : "auto", opacity: isScrolled ? 0 : 1 }} 
+                className="whitespace-nowrap overflow-hidden text-slate-900"
+              >
+                AudioFix
+              </motion.span>
             </div>
-            <motion.span animate={{ opacity: isScrolled ? 0 : 1, width: isScrolled ? 0 : "auto" }} className="whitespace-nowrap overflow-hidden text-slate-900">AudioFix</motion.span>
-          </div>
-          
-          <motion.div animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
-            <button onClick={() => scrollToSection('upload')} className="hover:text-blue-600 transition-colors">Produit</button>
-            <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors">Tarifs</button>
-          </motion.div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <motion.button 
-               animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "block" }}
-               onClick={() => setShowModal(true)} 
-               className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors"
-            >
-              Connexion
-            </motion.button>
-            <motion.button 
-              onClick={() => setShowModal(true)}
+            
+            <motion.div 
               layout
-              className="px-5 py-2 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
+              animate={{ opacity: isScrolled ? 0 : 1, width: isScrolled ? 0 : "auto", display: isScrolled ? "none" : "flex" }} 
+              className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 overflow-hidden"
             >
-              {isScrolled ? "S'inscrire" : "Essayer Pro"}
-            </motion.button>
-          </div>
-      </motion.nav>
+              <button onClick={() => scrollToSection('upload')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Produit</button>
+              <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Tarifs</button>
+            </motion.div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <motion.button 
+                layout
+                animate={{ width: isScrolled ? 0 : "auto", opacity: isScrolled ? 0 : 1, padding: isScrolled ? 0 : "0 0.75rem", display: isScrolled ? "none" : "block" }}
+                onClick={() => setShowModal(true)} 
+                className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors overflow-hidden whitespace-nowrap hidden sm:block"
+              >
+                Connexion
+              </motion.button>
+              <motion.button 
+                onClick={() => setShowModal(true)}
+                layout
+                className="px-5 py-2 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
+              >
+                {isScrolled ? "S'inscrire" : "Essayer Pro"}
+              </motion.button>
+            </div>
+        </motion.nav>
+      </div>
 
       {/* --- HERO SECTION --- */}
       <div className="relative pt-40 pb-32 px-6">
         
-        {/* --- FOND BLANC NET --- */}
+        {/* --- FOND --- */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
 
@@ -191,7 +199,6 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
             className="relative max-w-2xl mx-auto group"
           >
-            {/* Ombre colorée derrière */}
             <div className="absolute -inset-4 bg-gradient-to-r from-blue-100 to-violet-100 rounded-[3rem] blur-3xl opacity-50 -z-10 group-hover:opacity-70 transition-opacity duration-500"></div>
             
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl shadow-blue-200/20 p-2 relative">
@@ -293,7 +300,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- FEATURES (Colored) --- */}
+      {/* --- FEATURES --- */}
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
@@ -312,7 +319,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- PRICING (Colored) --- */}
+      {/* --- PRICING --- */}
       <div id="pricing" className="py-24 px-6 border-t border-slate-100 bg-slate-50/50">
          <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
@@ -329,7 +336,7 @@ export default function Home() {
                      <button onClick={() => scrollToSection('upload')} className="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-blue-600 hover:text-blue-600 transition-all">Commencer</button>
                  </div>
 
-                 {/* PRO (Blue Gradient Card) */}
+                 {/* PRO */}
                  <div className="p-8 rounded-[2rem] bg-gradient-to-b from-blue-600 to-violet-900 text-white text-left relative shadow-2xl shadow-blue-900/30 transform hover:scale-[1.02] transition-all">
                      <div className="absolute top-0 right-0 bg-white/20 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
                      <div className="text-blue-200 font-medium mb-2">Créateur Pro</div>
