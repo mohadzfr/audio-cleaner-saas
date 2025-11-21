@@ -63,7 +63,7 @@ export default function Home() {
     }
   };
 
-  // --- CONFIGURATION DYNAMIC ISLAND (Version Claire) ---
+  // --- CONFIGURATION DYNAMIC ISLAND (RESPONSIVE FIX) ---
   const navVariants = {
     top: { 
       width: "100%", 
@@ -71,17 +71,18 @@ export default function Home() {
       top: 0, 
       y: 0,
       borderRadius: 0, 
-      padding: "1.5rem 2rem", 
-      backgroundColor: "rgba(255, 255, 255, 0)", // Transparent
+      padding: "1.2rem 1.5rem", // Padding standard
+      backgroundColor: "rgba(255, 255, 255, 0)", 
       borderBottom: "1px solid rgba(0,0,0,0.05)"
     },
     scrolled: { 
-      width: "420px", 
-      top: 20,
+      width: "92%", // FIX MOBILE : Prend 92% de l'écran au lieu d'une taille fixe
+      maxWidth: "420px", // FIX PC : Ne dépasse pas 420px sur grand écran
+      top: 15,
       y: 0,
       borderRadius: "100px", 
-      padding: "0.75rem 1.5rem", 
-      backgroundColor: "rgba(255, 255, 255, 0.9)", // Blanc flouté
+      padding: "0.75rem 1.25rem", // Padding un peu plus serré pour mobile
+      backgroundColor: "rgba(255, 255, 255, 0.9)", 
       borderBottom: "1px solid rgba(0,0,0,0.1)",
       border: "1px solid rgba(0,0,0,0.1)",
       boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
@@ -136,7 +137,7 @@ export default function Home() {
             <motion.button 
                animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "block" }}
                onClick={() => setShowModal(true)} 
-               className="text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
+               className="text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors hidden sm:block" // Caché sur très petits mobiles au scroll
             >
               Connexion
             </motion.button>
@@ -153,7 +154,7 @@ export default function Home() {
       {/* --- HERO SECTION --- */}
       <div className="relative pt-40 pb-32 px-6">
         
-        {/* --- FOND BLANC NET (Plus d'icônes) --- */}
+        {/* --- FOND BLANC NET --- */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
 
@@ -180,7 +181,7 @@ export default function Home() {
             Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Sans studio. Sans ingénieur.
           </motion.p>
 
-          {/* --- UPLOAD CARD (Light Style) --- */}
+          {/* --- UPLOAD CARD --- */}
           <motion.div 
             id="upload"
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
