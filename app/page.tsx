@@ -59,7 +59,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-[#2D3748] font-sans overflow-x-hidden relative">
       
-      {/* --- MODAL "BIENTÔT" (Fake Door) --- */}
+      {/* --- MODAL "BIENTÔT" (Fake Door) - SANS ÉTOILE IA --- */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
            <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center relative transform transition-all scale-100">
@@ -70,11 +70,9 @@ export default function Home() {
                 <X className="w-5 h-5" />
               </button>
               
-              <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-600">
-                <Sparkles className="w-8 h-8" />
-              </div>
+              {/* Icône Sparkles supprimée ici pour un look plus sobre */}
               
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Accès Pro Limité</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mb-4 mt-6">Accès Pro Limité</h3>
               <p className="text-gray-500 mb-8 leading-relaxed">
                 Nous déployons les comptes Pro progressivement. Laissez-nous peaufiner les derniers détails.
               </p>
