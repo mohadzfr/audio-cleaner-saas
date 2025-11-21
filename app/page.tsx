@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Bot, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight } from "lucide-react";
+// J'ai ajouté l'import de useMotionValueEvent
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
 export default function Home() {
@@ -11,13 +12,16 @@ export default function Home() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // --- GESTION DU SCROLL (Optimisée) ---
+  // --- GESTION DU SCROLL (NOUVELLE MÉTHODE FIABLE) ---
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Utilisation de useMotionValueEvent pour une détection plus robuste
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const shouldBeScrolled = latest > 10; // Déclenchement immédiat pour fluidité
-    if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
+    const shouldBeScrolled = latest > 20;
+    if (shouldBeScrolled !== isScrolled) {
+      setIsScrolled(shouldBeScrolled);
+    }
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,112 +92,88 @@ export default function Home() {
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND (MORPHING FLUIDE) --- */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+      {/* --- DYNAMIC ISLAND NAVBAR (Version Corrigée & Fluide) --- */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
-          layout // LA CLÉ DU MORPHING
+          layout
           initial={false}
           animate={isScrolled ? "scrolled" : "top"}
           variants={{
             top: { 
               width: "100%", 
+              maxWidth: "100%",
               marginTop: 0,
               borderRadius: 0,
-              paddingTop: "1.5rem",
-              paddingBottom: "1.5rem",
-              paddingLeft: "2rem",
-              paddingRight: "2rem",
+              padding: "1rem 1.5rem",
               backgroundColor: "rgba(255, 255, 255, 0)",
               borderBottom: "1px solid rgba(0,0,0,0.0)",
-              boxShadow: "0 0 0 0 rgba(0,0,0,0)"
+              boxShadow: "none"
             },
             scrolled: { 
-              width: "92%", // Responsive Mobile
-              maxWidth: "480px", // Responsive Desktop
-              marginTop: 12,
-              borderRadius: 999, // Pillule parfaite
-              paddingTop: "0.75rem",
-              paddingBottom: "0.75rem",
-              paddingLeft: "1.25rem",
-              paddingRight: "1.25rem",
-              backgroundColor: "rgba(255, 255, 255, 0.85)",
-              borderBottom: "1px solid rgba(0,0,0,0.08)",
-              boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)"
+              // Utilisation de calc() pour une largeur plus stable sur mobile
+              width: "calc(100% - 2rem)", 
+              maxWidth: "500px", // Max sur PC
+              marginTop: 16,
+              borderRadius: 100,
+              padding: "0.75rem 1.25rem",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(12px)",
+              borderBottom: "1px solid rgba(0,0,0,0.1)",
+              border: "1px solid rgba(0,0,0,0.1)",
+              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
             }
           }}
-          // Physique de ressort lourde et douce (Apple Style)
-          transition={{ 
-            type: "spring", 
-            stiffness: 120, 
-            damping: 20, 
-            mass: 1 
-          }}
-          className="backdrop-blur-xl flex items-center justify-between pointer-events-auto border border-transparent overflow-hidden"
+          // Transition "ressort amorti" pour une fluidité maximale sans rebond
+          transition={{ type: "spring", stiffness: 200, damping: 30, mass: 0.8 }}
+          className="flex items-center justify-between pointer-events-auto overflow-hidden"
         >
             {/* LOGO */}
-            <motion.div layout className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-              <motion.div layout className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
-                <AudioWaveform className="w-4 h-4 text-white" />
-              </motion.div>
+            <div className="flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
+                <AudioWaveform className="w-5 h-5 text-white" />
+              </div>
+              {/* Sur mobile, on cache le texte AudioFix quand c'est scrollé pour gagner de la place */}
               <motion.span 
                 layout
-                animate={{ 
-                  width: isScrolled ? 0 : "auto", 
-                  opacity: isScrolled ? 0 : 1,
-                  marginRight: isScrolled ? 0 : 10
-                }} 
-                className="whitespace-nowrap overflow-hidden text-slate-900"
+                className={`whitespace-nowrap overflow-hidden text-slate-900 ${isScrolled ? 'hidden sm:block' : 'block'}`}
               >
                 AudioFix
               </motion.span>
-            </motion.div>
+            </div>
             
-            {/* MENU (Disparition fluide) */}
+            {/* MENU PC (Caché sur mobile) */}
             <motion.div 
               layout
-              animate={{ 
-                width: isScrolled ? 0 : "auto", 
-                opacity: isScrolled ? 0 : 1,
-                display: isScrolled ? "none" : "flex"
-              }} 
+              animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} 
               className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 overflow-hidden"
             >
               <button onClick={() => scrollToSection('upload')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Produit</button>
               <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Tarifs</button>
             </motion.div>
 
-            {/* ACTION BUTTONS */}
-            <motion.div layout className="flex items-center gap-2 shrink-0">
-              <motion.button 
-                 layout
-                 animate={{ 
-                   width: isScrolled ? 0 : "auto", 
-                   opacity: isScrolled ? 0 : 1, 
-                   display: isScrolled ? "none" : "block",
-                   padding: isScrolled ? 0 : "0 12px"
-                 }}
+            {/* BOUTONS DROITE */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* FIX MOBILE : Le bouton Connexion disparaît sur petit écran */}
+              <button 
                  onClick={() => setShowModal(true)} 
-                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors overflow-hidden whitespace-nowrap hidden sm:block"
+                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
               >
                 Connexion
-              </motion.button>
+              </button>
               
               <motion.button 
                 layout
                 onClick={() => setShowModal(true)}
-                className="px-5 py-2 bg-slate-900 text-white rounded-full font-bold text-sm hover:bg-black transition-colors shadow-sm"
-                whileTap={{ scale: 0.95 }}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
               >
-                {isScrolled ? "Essayer" : "S'inscrire"}
+                S'inscrire
               </motion.button>
-            </motion.div>
+            </div>
         </motion.nav>
       </div>
 
       {/* --- HERO SECTION --- */}
       <div className="relative pt-40 pb-32 px-6">
-        
-        {/* --- FOND --- */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
 
