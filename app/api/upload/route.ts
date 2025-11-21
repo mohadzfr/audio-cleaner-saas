@@ -10,21 +10,24 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async () => {
         return {
+          // LISTE DES FORMATS AUTORISÉS
           allowedContentTypes: [
             'audio/mpeg',       // mp3
             'audio/wav',        // wav
-            'audio/x-wav',      // wav (variante)
-            'audio/ogg',        // ogg (whatsapp/android)
-            'audio/x-m4a',      // m4a (iphone)
-            'audio/mp4',        // m4a (variante)
+            'audio/x-wav',      // wav
+            'audio/ogg',        // ogg
+            'audio/x-m4a',      // m4a
+            'audio/mp4',        // m4a
             'audio/aac',        // aac
-            'audio/webm',       // webm (enregistrements web)
+            'audio/webm',       // webm
             'audio/flac',       // flac
             'video/mp4',        // mp4
-            'video/quicktime',  // mov (iphone)
-            'video/webm',       // webm video
+            'video/quicktime',  // mov
+            'video/webm',       // webm
             'video/x-msvideo'   // avi
           ],
+          // LA CORRECTION EST ICI 👇
+          addRandomSuffix: true, // Ajoute un code unique si le nom existe déjà
           tokenPayload: JSON.stringify({}),
         };
       },
