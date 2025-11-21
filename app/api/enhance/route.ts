@@ -7,7 +7,6 @@ const replicate = new Replicate({
 
 export async function POST(request: Request) {
   try {
-    // --- 1. PRÉPARATION DE L'ENTRÉE ---
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -15,59 +14,55 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Aucun fichier reçu" }, { status: 400 });
     }
 
-    // Conversion en Data URI pour l'envoi
+    console.log(`Traitement : ${file.name} (Type détecté: ${file.type})`);
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const mimeType = file.type || "audio/wav";
+
+    // --- CORRECTION DU FORMAT ---
+    // On force le bon type MIME si le navigateur se trompe
+    let mimeType = file.type;
+    if (file.name.endsWith(".m4a")) mimeType = "audio/mp4";
+    if (file.name.endsWith(".mp3")) mimeType = "audio/mpeg";
+    if (file.name.endsWith(".wav")) mimeType = "audio/wav";
+    
+    // Si vraiment on sait pas, on met audio/mpeg qui est plus tolérant que wav
+    if (!mimeType) mimeType = "audio/mpeg";
+
     const base64Input = buffer.toString("base64");
     const dataURI = `data:${mimeType};base64,${base64Input}`;
 
-    console.log(`Traitement de ${file.name}...`);
-
-    // --- 2. APPEL A L'IA ---
+    // --- CHANGEMENT DE MODÈLE (PLAN B) ---
+    // DeepFilterNet est parfois trop agressif.
+    // On passe sur "Voice Fixer" (version stable) qui est meilleur pour reconstruire la voix
     const output = await replicate.run(
-      // 👇 TON ID DEEPFILTERNET ICI 👇
-      "meronym/deepfilternet:f07004438b8f3e6c5b720ba889389007cbf8dbbc9caa124afc24d9bbd2d307b8", 
+      "cjwbw/voice-fixer:f07004438b8f3e6c5b720ba889389007cbf8dbbc9caa124afc24d9bbd2d307b8",
       {
         input: {
-          audio_file: dataURI,
+          audio: dataURI, // Attention: Ce modèle veut "audio", pas "audio_file"
+          mode: "high_quality" // On force la haute qualité
         },
       }
     );
 
-    console.log("Type de réponse reçu :", typeof output);
-
-    // --- 3. TRAITEMENT DE LA SORTIE (Le Fix TypeScript) ---
+    // --- GESTION DE LA SORTIE ---
     let finalUrl = "";
-
-    // On force le type en 'any' pour que TypeScript arrête de pleurer sur .locked
     const responseRaw = output as any;
 
-    // CAS A : C'est un Stream (Le flux de données)
     if (responseRaw instanceof ReadableStream || responseRaw.locked !== undefined) {
-      console.log("🌊 C'est un Stream ! Conversion en cours...");
-      
-      // On lit le stream pour en faire un fichier
+       // Conversion Stream -> DataURI
       const response = new Response(responseRaw);
       const blob = await response.blob();
       const arrayBufferOutput = await blob.arrayBuffer();
       const bufferOutput = Buffer.from(arrayBufferOutput);
       const base64Output = bufferOutput.toString("base64");
-      
-      // On crée un "faux lien" Base64 jouable immédiatement
       finalUrl = `data:audio/wav;base64,${base64Output}`;
-    } 
-    // CAS B : C'est déjà un lien (String)
-    else if (typeof output === "string") {
+    } else if (typeof output === "string") {
       finalUrl = output;
-    }
-    // CAS C : C'est un objet ou une liste
-    else {
+    } else {
        // @ts-ignore
        finalUrl = Array.isArray(output) ? output[0] : (output.audio || output.file || "");
     }
-
-    console.log("✅ URL Finale générée (taille) :", finalUrl.length > 100 ? "Lien Base64 Long (OK)" : finalUrl);
 
     return NextResponse.json({ cleanedUrl: finalUrl });
 
