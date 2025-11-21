@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight } from "lucide-react";
+import { Upload, CheckCircle2, AudioWaveform, Zap, Shield, X, ArrowRight, Play, Pause } from "lucide-react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 
 export default function Home() {
@@ -63,36 +63,37 @@ export default function Home() {
     }
   };
 
-  // --- CONFIGURATION DYNAMIC ISLAND (RESPONSIVE FIX) ---
+  // --- CONFIGURATION NAVBAR (CORRECTION MOBILE) ---
   const navVariants = {
     top: { 
-      width: "100%", 
-      maxWidth: "1280px",
+      width: "100%", // Prend toute la largeur
+      maxWidth: "100%", // Empêche de dépasser sur mobile
       top: 0, 
       y: 0,
       borderRadius: 0, 
-      padding: "1.2rem 1.5rem", // Padding standard
-      backgroundColor: "rgba(255, 255, 255, 0)", 
-      borderBottom: "1px solid rgba(0,0,0,0.05)"
+      padding: "1.2rem 1.5rem", 
+      backgroundColor: "rgba(255, 255, 255, 0)", // Transparent
+      borderBottom: "1px solid rgba(0,0,0,0.05)",
+      boxShadow: "none"
     },
     scrolled: { 
-      width: "92%", // FIX MOBILE : Prend 92% de l'écran au lieu d'une taille fixe
-      maxWidth: "420px", // FIX PC : Ne dépasse pas 420px sur grand écran
+      width: "92%", // Mobile : 92% de la largeur
+      maxWidth: "450px", // PC : Bloqué à 450px
       top: 15,
       y: 0,
       borderRadius: "100px", 
-      padding: "0.75rem 1.25rem", // Padding un peu plus serré pour mobile
-      backgroundColor: "rgba(255, 255, 255, 0.9)", 
+      padding: "0.75rem 1.5rem", 
+      backgroundColor: "rgba(255, 255, 255, 0.9)", // Blanc flouté
       borderBottom: "1px solid rgba(0,0,0,0.1)",
       border: "1px solid rgba(0,0,0,0.1)",
-      boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
+      boxShadow: "0 10px 30px -10px rgba(0,0,0,0.08)"
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
-      {/* --- MODAL LIGHT --- */}
+      {/* --- MODAL --- */}
       <AnimatePresence>
       {showModal && (
         <motion.div 
@@ -106,23 +107,23 @@ export default function Home() {
               <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 transition-colors"><X className="w-5 h-5" /></button>
               <h3 className="text-xl font-bold mb-2 text-slate-900 mt-4">Accès Pro Bientôt</h3>
               <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation.</p>
-              <button onClick={() => setShowModal(false)} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all">Compris</button>
+              <button onClick={() => setShowModal(false)} className="w-full py-3 bg-slate-900 hover:bg-black text-white rounded-xl font-semibold transition-all">Compris</button>
            </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND NAVBAR --- */}
+      {/* --- NAVBAR --- */}
       <motion.nav 
         initial="top"
         animate={isScrolled ? "scrolled" : "top"}
         variants={navVariants}
         transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
-        style={{ position: "fixed", left: "50%", x: "-50%", zIndex: 50 }}
+        style={{ position: "fixed", left: "50%", x: "-50%", zIndex: 50, boxSizing: "border-box" }}
         className="backdrop-blur-xl flex items-center justify-between overflow-hidden"
       >
           <div className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center shadow-md">
               <AudioWaveform className="w-4 h-4 text-white" />
             </div>
             <motion.span animate={{ opacity: isScrolled ? 0 : 1, width: isScrolled ? 0 : "auto" }} className="whitespace-nowrap overflow-hidden text-slate-900">AudioFix</motion.span>
@@ -137,14 +138,14 @@ export default function Home() {
             <motion.button 
                animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "block" }}
                onClick={() => setShowModal(true)} 
-               className="text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors hidden sm:block" // Caché sur très petits mobiles au scroll
+               className="text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
             >
               Connexion
             </motion.button>
             <motion.button 
               onClick={() => setShowModal(true)}
               layout
-              className="px-5 py-2 bg-slate-900 text-white rounded-full font-bold text-sm hover:bg-slate-800 transition-colors shadow-sm"
+              className="px-5 py-2 bg-slate-900 text-white rounded-full font-bold text-sm hover:bg-black transition-colors shadow-sm"
             >
               {isScrolled ? "S'inscrire" : "Essayer Pro"}
             </motion.button>
@@ -161,8 +162,8 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-8 uppercase tracking-wider">
-               <Sparkles className="w-3 h-3" /> Version 2.0
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mb-8 uppercase tracking-wider">
+               Version 2.0
             </div>
           </motion.div>
 
@@ -171,14 +172,14 @@ export default function Home() {
             className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]"
           >
             Votre audio. <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600">Parfaitement clair.</span>
+            <span className="text-slate-400">Parfaitement clair.</span>
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="text-xl text-slate-500 mb-16 max-w-2xl mx-auto leading-relaxed"
           >
-            Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Sans studio. Sans ingénieur.
+            Supprimez le bruit de fond instantanément.<br/> Sans studio. Sans ingénieur.
           </motion.p>
 
           {/* --- UPLOAD CARD --- */}
@@ -187,10 +188,11 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
             className="relative max-w-2xl mx-auto group"
           >
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-100 to-violet-100 rounded-[3rem] blur-3xl opacity-50 -z-10 group-hover:opacity-70 transition-opacity duration-500"></div>
+            {/* Ombre très douce derrière */}
+            <div className="absolute -inset-4 bg-gradient-to-b from-slate-200 to-white rounded-[3rem] -z-10 opacity-50"></div>
             
             <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl shadow-slate-200/50 p-2 relative">
-              <div className="rounded-[1.5rem] bg-slate-50/50 border border-slate-100 p-8 md:p-12 min-h-[350px] flex flex-col items-center justify-center relative overflow-hidden transition-colors hover:border-blue-200/50">
+              <div className="rounded-[1.5rem] bg-slate-50/50 border border-slate-100 p-8 md:p-12 min-h-[350px] flex flex-col items-center justify-center relative overflow-hidden transition-colors hover:border-slate-200">
                 
                 <AnimatePresence mode="wait">
                   {/* UPLOAD STATE */}
@@ -200,12 +202,12 @@ export default function Home() {
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="flex flex-col items-center cursor-pointer group/label w-full z-10"
                     >
-                      <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-100 group-hover/label:scale-110 group-hover/label:border-blue-300 group-hover/label:shadow-md transition-all duration-300">
-                        <Upload className="w-8 h-8 text-slate-400 group-hover/label:text-blue-500" />
+                      <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-100 group-hover/label:scale-110 group-hover/label:border-slate-300 group-hover/label:shadow-md transition-all duration-300">
+                        <Upload className="w-8 h-8 text-slate-400 group-hover/label:text-slate-900" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">Glissez votre fichier audio</h3>
                       <p className="text-slate-500 mb-8 text-sm">MP3, WAV, M4A (Max 50Mo)</p>
-                      <div className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg hover:shadow-blue-200 hover:-translate-y-0.5">
+                      <div className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg hover:-translate-y-0.5">
                         Sélectionner un fichier
                       </div>
                       <input type="file" accept="audio/*" onChange={handleFileChange} className="hidden" />
@@ -220,13 +222,13 @@ export default function Home() {
                       className="w-full text-center z-10"
                     >
                       <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-full mb-8 shadow-sm">
-                         <AudioWaveform className="w-4 h-4 text-blue-500"/>
+                         <AudioWaveform className="w-4 h-4 text-slate-500"/>
                          <span className="text-slate-700 font-medium">{file.name}</span>
                       </div>
                       
                       <button 
                         onClick={cleanAudio} 
-                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/20 hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-black hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                       >
                         <Wand2 className="w-5 h-5" />
                         Nettoyer avec l'IA
@@ -242,7 +244,7 @@ export default function Home() {
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="text-center z-10"
                     >
-                      <div className="w-16 h-16 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
+                      <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-6"></div>
                       <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
                     </motion.div>
                   )}
@@ -264,7 +266,7 @@ export default function Home() {
                       </div>
 
                       <div className="flex gap-4">
-                        <a href={result} download="clean.wav" className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all text-center shadow-lg hover:-translate-y-0.5">
+                        <a href={result} download="clean.wav" className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all text-center shadow-lg hover:-translate-y-0.5">
                           Télécharger
                         </a>
                         <button onClick={() => {setFile(null); setResult(null)}} className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-colors">
@@ -288,15 +290,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- FEATURES (Light) --- */}
+      {/* --- FEATURES (Pure White) --- */}
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Ultra Rapide", desc: "Avec un traitement en quelques secondes. Tout en améliorant la qualité sonore. ", color: "text-amber-500", bg: "bg-amber-50" },
-            { icon: Wand2, title: "IA DeepFilter", desc: "Technologie de pointe, avec suppresion de bruit de fond et nuissance sonore.", color: "text-blue-500", bg: "bg-blue-50" },
-            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers. Aucun fichier n'est enregistré sur nos serveur.", color: "text-green-500", bg: "bg-green-50" }
+            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-slate-900", bg: "bg-slate-100" },
+            { icon: Wand2, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-slate-900", bg: "bg-slate-100" },
+            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-slate-900", bg: "bg-slate-100" }
           ].map((feature, i) => (
-            <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-100 transition-all duration-300 group hover:-translate-y-1">
+            <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-slate-200 transition-all duration-300 group hover:-translate-y-1">
               <div className={`w-12 h-12 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 ${feature.color} group-hover:scale-110 transition-transform shadow-sm`}>
                 <feature.icon className="w-6 h-6" />
               </div>
@@ -307,7 +309,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- PRICING (Light) --- */}
+      {/* --- PRICING (Clean) --- */}
       <div id="pricing" className="py-24 px-6 border-t border-slate-100 bg-slate-50/50">
          <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
@@ -324,17 +326,17 @@ export default function Home() {
                      <button onClick={() => scrollToSection('upload')} className="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-slate-900 hover:text-slate-900 transition-all">Commencer</button>
                  </div>
 
-                 {/* PRO (Dark Contrast Card) */}
-                 <div className="p-8 rounded-[2rem] bg-[#0F172A] text-white text-left relative shadow-2xl shadow-blue-900/20 transform hover:scale-[1.02] transition-all">
-                     <div className="absolute top-0 right-0 bg-blue-600 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
-                     <div className="text-blue-200 font-medium mb-2">Créateur Pro</div>
-                     <div className="text-4xl font-bold text-white mb-6">9€ <span className="text-lg text-slate-400 font-normal">/mois</span></div>
+                 {/* PRO (Black Card) */}
+                 <div className="p-8 rounded-[2rem] bg-slate-900 text-white text-left relative shadow-2xl transform hover:scale-[1.02] transition-all">
+                     <div className="absolute top-0 right-0 bg-white text-slate-900 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
+                     <div className="text-slate-300 font-medium mb-2">Créateur Pro</div>
+                     <div className="text-4xl font-bold text-white mb-6">9€ <span className="text-lg text-slate-500 font-normal">/mois</span></div>
                      <ul className="space-y-4 mb-8 text-sm text-slate-300">
-                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-blue-400"/> Illimité</li>
-                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-blue-400"/> Qualité Studio (WAV)</li>
-                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-blue-400"/> Support prioritaire</li>
+                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Illimité</li>
+                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Qualité Studio (WAV)</li>
+                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Support prioritaire</li>
                      </ul>
-                     <button onClick={() => setShowModal(true)} className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all shadow-lg">Passer Pro</button>
+                     <button onClick={() => setShowModal(true)} className="w-full py-3 rounded-xl bg-white text-slate-900 font-bold hover:bg-slate-200 transition-all shadow-lg">Passer Pro</button>
                  </div>
              </div>
          </div>
