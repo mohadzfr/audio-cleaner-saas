@@ -9,10 +9,22 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async () => {
-        // Ici tu pourras ajouter une sécurité (ex: vérifier si l'user est connecté)
-        // Pour l'instant, on laisse ouvert pour la démo
         return {
-          allowedContentTypes: ['audio/mpeg', 'audio/wav', 'audio/x-m4a', 'video/mp4', 'video/quicktime'],
+          allowedContentTypes: [
+            'audio/mpeg',       // mp3
+            'audio/wav',        // wav
+            'audio/x-wav',      // wav (variante)
+            'audio/ogg',        // ogg (whatsapp/android)
+            'audio/x-m4a',      // m4a (iphone)
+            'audio/mp4',        // m4a (variante)
+            'audio/aac',        // aac
+            'audio/webm',       // webm (enregistrements web)
+            'audio/flac',       // flac
+            'video/mp4',        // mp4
+            'video/quicktime',  // mov (iphone)
+            'video/webm',       // webm video
+            'video/x-msvideo'   // avi
+          ],
           tokenPayload: JSON.stringify({}),
         };
       },
@@ -25,7 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
-      { status: 400 }, // Bad Request
+      { status: 400 },
     );
   }
 }
