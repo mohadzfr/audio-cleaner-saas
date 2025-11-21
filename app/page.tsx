@@ -11,20 +11,26 @@ export default function Home() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // --- GESTION DU SCROLL ---
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const shouldBeScrolled = latest > 20;
-    if (shouldBeScrolled !== isScrolled) {
-      setIsScrolled(shouldBeScrolled);
-    }
+    if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      
+      // --- SÉCURITÉ TAILLE (Patch Vercel) ---
+      // 4 Mo max (4 * 1024 * 1024 bytes)
+      if (selectedFile.size > 4 * 1024 * 1024) {
+        alert(" La taille du fichier doit être inférieure à 4 Mo.");
+        return;
+      }
+
+      setFile(selectedFile);
       setError("");
       setResult(null);
       setTimeout(() => scrollToSection('player'), 500);
@@ -40,18 +46,34 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      
       const response = await fetch("/api/enhance", { method: "POST", body: formData });
-      const data = await response.json();
+      
+      // Lecture brute pour éviter le crash JSON
+      const responseText = await response.text();
 
-      if (response.ok) {
-        let finalUrl = data.cleanedUrl;
-        if (typeof finalUrl === 'object') finalUrl = JSON.stringify(finalUrl);
-        setResult(finalUrl);
-      } else {
-        setError(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error || "Erreur inconnue");
+      try {
+        const data = JSON.parse(responseText); // On tente de lire le JSON
+
+        if (response.ok) {
+          let finalUrl = data.cleanedUrl;
+          if (typeof finalUrl === 'object') finalUrl = JSON.stringify(finalUrl);
+          setResult(finalUrl);
+        } else {
+          setError(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error || "Erreur inconnue");
+        }
+      } catch (e) {
+        // Si ce n'est pas du JSON, c'est que le serveur a planté (Timeout ou Taille)
+        console.error("Erreur brute:", responseText);
+        if (responseText.includes("413") || responseText.includes("large")) {
+             setError("Erreur : Fichier trop lourd (Limite serveur atteinte).");
+        } else {
+             setError("Erreur critique du serveur. Réessayez avec un fichier plus court.");
+        }
       }
+
     } catch (err: any) {
-      setError("Erreur : " + (err.message || String(err)));
+      setError("Erreur de connexion : " + (err.message || String(err)));
     } finally {
       setLoading(false);
     }
@@ -64,13 +86,11 @@ export default function Home() {
     }
   };
 
-  // Helper pour savoir si c'est une vidéo
   const isVideo = file?.type.startsWith('video');
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
-      {/* --- MODAL --- */}
       <AnimatePresence>
       {showModal && (
         <motion.div 
@@ -90,7 +110,6 @@ export default function Home() {
       )}
       </AnimatePresence>
 
-      {/* --- NAVBAR --- */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
           layout
@@ -162,7 +181,6 @@ export default function Home() {
         </motion.nav>
       </div>
 
-      {/* --- HERO --- */}
       <div className="relative pt-40 pb-32 px-6">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
@@ -179,7 +197,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]"
           >
-            Votre audio.<br/>
+            Votre audio. <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600">Parfaitement clair.</span>
           </motion.h1>
           
@@ -190,7 +208,6 @@ export default function Home() {
             Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Compatible Audio & Vidéo.
           </motion.p>
 
-          {/* --- UPLOAD CARD --- */}
           <motion.div 
             id="upload"
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
@@ -202,7 +219,6 @@ export default function Home() {
               <div className="rounded-[1.5rem] bg-slate-50/50 border border-slate-100 p-8 md:p-12 min-h-[350px] flex flex-col items-center justify-center relative overflow-hidden transition-colors hover:border-blue-300">
                 
                 <AnimatePresence mode="wait">
-                  {/* UPLOAD STATE */}
                   {!file && !loading && !result && (
                     <motion.label 
                       key="upload"
@@ -220,12 +236,10 @@ export default function Home() {
                       <div className="px-8 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5">
                         Sélectionner
                       </div>
-                      {/* ACCEPT VIDEO AND AUDIO */}
                       <input type="file" accept="audio/*,video/*" onChange={handleFileChange} className="hidden" />
                     </motion.label>
                   )}
 
-                  {/* FILE STATE */}
                   {file && !loading && !result && (
                     <motion.div 
                       key="file"
@@ -233,7 +247,6 @@ export default function Home() {
                       className="w-full text-center z-10"
                     >
                       <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-blue-100 rounded-full mb-8 shadow-sm">
-                         {/* Icône dynamique selon le type */}
                          {isVideo ? <Video className="w-4 h-4 text-purple-600"/> : <FileAudio className="w-4 h-4 text-blue-600"/>}
                          <span className="text-slate-700 font-medium">{file.name}</span>
                       </div>
@@ -249,7 +262,6 @@ export default function Home() {
                     </motion.div>
                   )}
 
-                  {/* LOADING STATE */}
                   {loading && (
                     <motion.div 
                       key="loading"
@@ -258,11 +270,10 @@ export default function Home() {
                     >
                       <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
                       <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
-                      <p className="text-slate-500 text-sm mt-2">Extraction de la voix...</p>
+                      <p className="text-slate-500 text-sm mt-2">L'IA analyse et sépare la voix.</p>
                     </motion.div>
                   )}
 
-                  {/* RESULT STATE */}
                   {result && (
                     <motion.div 
                       id="player"
@@ -286,9 +297,7 @@ export default function Home() {
                           Nouveau
                         </button>
                       </div>
-                      {isVideo && (
-                          <p className="text-xs text-slate-400 mt-4">Note: Pour les vidéos, nous extrayons l'audio nettoyé.</p>
-                      )}
+                      {isVideo && <p className="text-xs text-slate-400 mt-4">Audio extrait et nettoyé.</p>}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -311,7 +320,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
             { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-amber-500", bg: "bg-amber-50" },
-            { icon: Bot, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Bot, title: "IA MP-SENet", desc: "Séparation vocale de haute précision.", color: "text-blue-500", bg: "bg-blue-50" },
             { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-green-500", bg: "bg-green-50" }
           ].map((feature, i) => (
             <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-200 transition-all duration-300 group hover:-translate-y-1">
@@ -331,7 +340,6 @@ export default function Home() {
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
              
              <div className="grid md:grid-cols-2 gap-8 items-start">
-                 {/* FREE */}
                  <div className="p-8 rounded-[2rem] bg-white border border-slate-200 text-left hover:shadow-lg transition-all hover:border-blue-200">
                      <div className="text-slate-500 font-medium mb-2">Découverte</div>
                      <div className="text-4xl font-bold text-slate-900 mb-6">0€</div>
@@ -342,7 +350,6 @@ export default function Home() {
                      <button onClick={() => scrollToSection('upload')} className="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-blue-600 hover:text-blue-600 transition-all">Commencer</button>
                  </div>
 
-                 {/* PRO */}
                  <div className="p-8 rounded-[2rem] bg-gradient-to-b from-blue-600 to-violet-900 text-white text-left relative shadow-2xl shadow-blue-900/30 transform hover:scale-[1.02] transition-all">
                      <div className="absolute top-0 right-0 bg-white/20 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
                      <div className="text-blue-200 font-medium mb-2">Créateur Pro</div>
@@ -350,7 +357,7 @@ export default function Home() {
                      <ul className="space-y-4 mb-8 text-sm text-blue-100">
                          <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Illimité</li>
                          <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Qualité Studio (WAV)</li>
-                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Support prioritaire</li>
+                         <li className="flex gap-3"><CheckCircle2 className="w-4 h-4 text-white"/> Vidéos longues</li>
                      </ul>
                      <button onClick={() => setShowModal(true)} className="w-full py-3 rounded-xl bg-white text-blue-900 font-bold hover:bg-blue-50 transition-all shadow-lg">Passer Pro</button>
                  </div>
