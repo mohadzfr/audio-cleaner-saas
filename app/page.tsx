@@ -305,9 +305,9 @@ export default function Home() {
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-amber-500", bg: "bg-amber-50" },
-            { icon: Bot, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-blue-500", bg: "bg-blue-50" },
-            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-green-500", bg: "bg-green-50" }
+            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes. Déposer votre audio buvez un vers d'eau et c'est prêt ", color: "text-amber-500", bg: "bg-amber-50" },
+            { icon: Bot, title: "IA DeepFilter", desc: "Suppression intelligente du bruit. Il ne restera que votre voix.", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers. Après traitement, aucun fichier est stocké sur notre serveur.", color: "text-green-500", bg: "bg-green-50" }
           ].map((feature, i) => (
             <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-200 transition-all duration-300 group hover:-translate-y-1">
               <div className={`w-12 h-12 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 ${feature.color} group-hover:scale-110 transition-transform shadow-sm`}>
