@@ -19,28 +19,26 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // --- CORRECTION DU FORMAT ---
-    // On force le bon type MIME si le navigateur se trompe
+    // Correction des extensions pour aider l'IA
     let mimeType = file.type;
     if (file.name.endsWith(".m4a")) mimeType = "audio/mp4";
     if (file.name.endsWith(".mp3")) mimeType = "audio/mpeg";
     if (file.name.endsWith(".wav")) mimeType = "audio/wav";
-    
-    // Si vraiment on sait pas, on met audio/mpeg qui est plus tolérant que wav
     if (!mimeType) mimeType = "audio/mpeg";
 
     const base64Input = buffer.toString("base64");
     const dataURI = `data:${mimeType};base64,${base64Input}`;
 
-    // --- CHANGEMENT DE MODÈLE (PLAN B) ---
-    // DeepFilterNet est parfois trop agressif.
-    // On passe sur "Voice Fixer" (version stable) qui est meilleur pour reconstruire la voix
+    console.log("Envoi à Voice Fixer...");
+
+    // --- MODÈLE VOICE FIXER ---
     const output = await replicate.run(
       "cjwbw/voice-fixer:f07004438b8f3e6c5b720ba889389007cbf8dbbc9caa124afc24d9bbd2d307b8",
       {
         input: {
-          audio: dataURI, // Attention: Ce modèle veut "audio", pas "audio_file"
-          mode: "high_quality" // On force la haute qualité
+          // C'EST ICI LA CORRECTION : L'erreur exigeait "audio_file"
+          audio_file: dataURI, 
+          mode: "high_quality"
         },
       }
     );
@@ -50,7 +48,6 @@ export async function POST(request: Request) {
     const responseRaw = output as any;
 
     if (responseRaw instanceof ReadableStream || responseRaw.locked !== undefined) {
-       // Conversion Stream -> DataURI
       const response = new Response(responseRaw);
       const blob = await response.blob();
       const arrayBufferOutput = await blob.arrayBuffer();
