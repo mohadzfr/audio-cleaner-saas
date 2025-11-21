@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, CheckCircle2, AudioWaveform, Zap, Shield, X, ArrowRight, Play, Pause } from "lucide-react";
+// CORRECTION ICI : J'ai rajouté Wand2 et Sparkles
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 
 export default function Home() {
@@ -66,24 +67,24 @@ export default function Home() {
   // --- CONFIGURATION NAVBAR (CORRECTION MOBILE) ---
   const navVariants = {
     top: { 
-      width: "100%", // Prend toute la largeur
-      maxWidth: "100%", // Empêche de dépasser sur mobile
+      width: "100%", 
+      maxWidth: "100%",
       top: 0, 
       y: 0,
       borderRadius: 0, 
       padding: "1.2rem 1.5rem", 
-      backgroundColor: "rgba(255, 255, 255, 0)", // Transparent
+      backgroundColor: "rgba(255, 255, 255, 0)", 
       borderBottom: "1px solid rgba(0,0,0,0.05)",
       boxShadow: "none"
     },
     scrolled: { 
-      width: "92%", // Mobile : 92% de la largeur
-      maxWidth: "450px", // PC : Bloqué à 450px
+      width: "92%", 
+      maxWidth: "450px",
       top: 15,
       y: 0,
       borderRadius: "100px", 
       padding: "0.75rem 1.5rem", 
-      backgroundColor: "rgba(255, 255, 255, 0.9)", // Blanc flouté
+      backgroundColor: "rgba(255, 255, 255, 0.9)", 
       borderBottom: "1px solid rgba(0,0,0,0.1)",
       border: "1px solid rgba(0,0,0,0.1)",
       boxShadow: "0 10px 30px -10px rgba(0,0,0,0.08)"
@@ -163,7 +164,7 @@ export default function Home() {
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mb-8 uppercase tracking-wider">
-               Version 2.0
+               <Sparkles className="w-3 h-3" /> Version 2.0
             </div>
           </motion.div>
 
@@ -290,15 +291,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- FEATURES (Pure White) --- */}
+      {/* --- FEATURES (Light) --- */}
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-slate-900", bg: "bg-slate-100" },
-            { icon: Wand2, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-slate-900", bg: "bg-slate-100" },
-            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-slate-900", bg: "bg-slate-100" }
+            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-amber-500", bg: "bg-amber-50" },
+            { icon: Wand2, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-green-500", bg: "bg-green-50" }
           ].map((feature, i) => (
-            <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-slate-200 transition-all duration-300 group hover:-translate-y-1">
+            <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-100 transition-all duration-300 group hover:-translate-y-1">
               <div className={`w-12 h-12 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 ${feature.color} group-hover:scale-110 transition-transform shadow-sm`}>
                 <feature.icon className="w-6 h-6" />
               </div>
@@ -309,7 +310,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- PRICING (Clean) --- */}
+      {/* --- PRICING (Light) --- */}
       <div id="pricing" className="py-24 px-6 border-t border-slate-100 bg-slate-50/50">
          <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
