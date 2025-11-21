@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Bot, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight } from "lucide-react";
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot } from "lucide-react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 
 export default function Home() {
@@ -90,96 +90,81 @@ export default function Home() {
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND CONTAINER (Nouvelle Architecture) --- */}
-      {/* Ce container prend toute la largeur et gère le centrage sans 'transform', ce qui est beaucoup plus fluide */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pointer-events-none pt-4 px-4 md:pt-6">
+      {/* --- DYNAMIC ISLAND NAVBAR (Version Stabilisée & Responsive) --- */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
-          layout // La magie pour la fluidité
+          layout
           initial={false}
           animate={isScrolled ? "scrolled" : "top"}
           variants={{
             top: { 
               width: "100%", 
-              maxWidth: "1280px", 
-              borderRadius: "0px", 
-              padding: "0.75rem 1.5rem",
-              backgroundColor: "rgba(255, 255, 255, 0)", // Invisible en haut
-              border: "1px solid transparent",
-              y: -10
+              maxWidth: "100%",
+              marginTop: 0,
+              borderRadius: 0,
+              padding: "1rem 1.5rem",
+              backgroundColor: "rgba(255, 255, 255, 0)",
+              borderBottom: "1px solid rgba(0,0,0,0.0)"
             },
             scrolled: { 
-              width: "fit-content", 
-              maxWidth: "92%", // Sécurité mobile
-              borderRadius: "100px", 
-              padding: "0.5rem 0.75rem", // Compact quand scrollé
-              backgroundColor: "rgba(255, 255, 255, 0.85)", // Glassmorphism
+              width: "92%", // Responsive mobile
+              maxWidth: "500px", // Max sur PC
+              marginTop: 16,
+              borderRadius: 100,
+              padding: "0.75rem 1.25rem",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
               backdropFilter: "blur(12px)",
-              border: "1px solid rgba(0,0,0,0.08)",
-              boxShadow: "0 8px 20px -6px rgba(0,0,0,0.1)",
-              y: 0
+              borderBottom: "1px solid rgba(0,0,0,0.1)",
+              border: "1px solid rgba(0,0,0,0.1)",
+              boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)"
             }
           }}
-          // Physique de ressort "Apple" (pas de rebond exagéré, juste lisse)
-          transition={{ type: "spring", stiffness: 200, damping: 30, mass: 1 }}
-          className="flex items-center justify-between pointer-events-auto overflow-hidden gap-4 md:gap-8"
+          // SECRET DE FLUIDITÉ : Stiffness (vitesse) et Damping (freinage) ajustés pour éviter le tremblement
+          transition={{ type: "spring", stiffness: 200, damping: 30, mass: 0.8 }}
+          className="flex items-center justify-between pointer-events-auto overflow-hidden"
         >
             {/* LOGO */}
-            <motion.div layout className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0 pl-2" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+            <div className="flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
               <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
-                <AudioWaveform className="w-4 h-4 text-white" />
+                <AudioWaveform className="w-5 h-5 text-white" />
               </div>
+              {/* Sur mobile, on cache le texte AudioFix quand c'est scrollé pour gagner de la place */}
               <motion.span 
                 layout
-                animate={{ 
-                  width: isScrolled ? 0 : "auto", 
-                  opacity: isScrolled ? 0 : 1,
-                  marginRight: isScrolled ? 0 : 4 
-                }} 
-                className="whitespace-nowrap overflow-hidden text-slate-900"
+                className={`whitespace-nowrap overflow-hidden text-slate-900 ${isScrolled ? 'hidden sm:block' : 'block'}`}
               >
                 AudioFix
               </motion.span>
-            </motion.div>
+            </div>
             
-            {/* MENU (Disparaît au scroll) */}
+            {/* MENU PC (Caché sur mobile) */}
             <motion.div 
               layout
-              animate={{ 
-                width: isScrolled ? 0 : "auto", 
-                opacity: isScrolled ? 0 : 1,
-                display: isScrolled ? "none" : "flex"
-              }} 
+              animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} 
               className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 overflow-hidden"
             >
               <button onClick={() => scrollToSection('upload')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Produit</button>
               <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Tarifs</button>
             </motion.div>
 
-            {/* BOUTONS ACTION */}
-            <motion.div layout className="flex items-center gap-2 shrink-0 pr-1">
-              <motion.button 
-                 layout
-                 animate={{ 
-                   width: isScrolled ? 0 : "auto", 
-                   opacity: isScrolled ? 0 : 1, 
-                   display: isScrolled ? "none" : "block",
-                   marginRight: isScrolled ? 0 : 8
-                 }}
+            {/* BOUTONS DROITE */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* FIX MOBILE : Le bouton Connexion disparaît sur petit écran */}
+              <button 
                  onClick={() => setShowModal(true)} 
-                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors overflow-hidden whitespace-nowrap hidden sm:block"
+                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
               >
                 Connexion
-              </motion.button>
+              </button>
               
               <motion.button 
                 layout
                 onClick={() => setShowModal(true)}
-                className={`rounded-full font-bold text-sm transition-colors shadow-sm whitespace-nowrap flex items-center justify-center ${isScrolled ? 'w-9 h-9 p-0 bg-slate-900 text-white hover:bg-black' : 'px-5 py-2 bg-blue-600 text-white hover:bg-blue-700'}`}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
               >
-                {/* Astuce : On change le texte en icône quand c'est scrollé pour gagner de la place sur mobile */}
-                {isScrolled ? <ArrowRight className="w-4 h-4" /> : "S'inscrire"}
+                S'inscrire
               </motion.button>
-            </motion.div>
+            </div>
         </motion.nav>
       </div>
 
@@ -318,7 +303,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- FEATURES --- */}
+      {/* --- FEATURES (Colored) --- */}
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
@@ -337,7 +322,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- PRICING --- */}
+      {/* --- PRICING (Colored) --- */}
       <div id="pricing" className="py-24 px-6 border-t border-slate-100 bg-slate-50/50">
          <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
@@ -354,7 +339,7 @@ export default function Home() {
                      <button onClick={() => scrollToSection('upload')} className="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-blue-600 hover:text-blue-600 transition-all">Commencer</button>
                  </div>
 
-                 {/* PRO */}
+                 {/* PRO (Blue Gradient Card) */}
                  <div className="p-8 rounded-[2rem] bg-gradient-to-b from-blue-600 to-violet-900 text-white text-left relative shadow-2xl shadow-blue-900/30 transform hover:scale-[1.02] transition-all">
                      <div className="absolute top-0 right-0 bg-white/20 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
                      <div className="text-blue-200 font-medium mb-2">Créateur Pro</div>
