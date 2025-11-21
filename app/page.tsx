@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { upload } from '@vercel/blob/client'; // IMPORT IMPORTANT
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,6 +11,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // Pour voir la progression
 
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,16 +23,7 @@ export default function Home() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      
-      // --- SÉCURITÉ TAILLE (Patch Vercel) ---
-      // 4 Mo max (4 * 1024 * 1024 bytes)
-      if (selectedFile.size > 4 * 1024 * 1024) {
-        alert(" La taille du fichier doit être inférieure à 4 Mo.");
-        return;
-      }
-
-      setFile(selectedFile);
+      setFile(e.target.files[0]);
       setError("");
       setResult(null);
       setTimeout(() => scrollToSection('player'), 500);
@@ -42,19 +35,34 @@ export default function Home() {
     setLoading(true);
     setError("");
     setResult(null);
+    setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      // ÉTAPE 1 : Upload vers Vercel Blob (Stockage Cloud)
+      // Cela contourne la limite de 4.5Mo du serveur
+      console.log("Début upload Blob...");
+      const newBlob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        onUploadProgress: (progressEvent) => {
+           setUploadProgress(progressEvent.percentage);
+        }
+      });
+
+      console.log("Fichier stocké ici :", newBlob.url);
+      setUploadProgress(100);
+
+      // ÉTAPE 2 : Envoi de l'URL à l'IA
+      const response = await fetch("/api/enhance", { 
+        method: "POST", 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileUrl: newBlob.url }) // On envoie l'URL, pas le fichier
+      });
       
-      const response = await fetch("/api/enhance", { method: "POST", body: formData });
-      
-      // Lecture brute pour éviter le crash JSON
       const responseText = await response.text();
 
       try {
-        const data = JSON.parse(responseText); // On tente de lire le JSON
-
+        const data = JSON.parse(responseText);
         if (response.ok) {
           let finalUrl = data.cleanedUrl;
           if (typeof finalUrl === 'object') finalUrl = JSON.stringify(finalUrl);
@@ -63,17 +71,12 @@ export default function Home() {
           setError(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error || "Erreur inconnue");
         }
       } catch (e) {
-        // Si ce n'est pas du JSON, c'est que le serveur a planté (Timeout ou Taille)
         console.error("Erreur brute:", responseText);
-        if (responseText.includes("413") || responseText.includes("large")) {
-             setError("Erreur : Fichier trop lourd (Limite serveur atteinte).");
-        } else {
-             setError("Erreur critique du serveur. Réessayez avec un fichier plus court.");
-        }
+        setError("Le traitement a pris trop de temps ou le serveur est surchargé.");
       }
 
     } catch (err: any) {
-      setError("Erreur de connexion : " + (err.message || String(err)));
+      setError("Erreur : " + (err.message || String(err)));
     } finally {
       setLoading(false);
     }
@@ -270,7 +273,17 @@ export default function Home() {
                     >
                       <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
                       <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
-                      <p className="text-slate-500 text-sm mt-2">L'IA analyse et sépare la voix.</p>
+                      
+                      {/* BARRE DE PROGRESSION DE L'UPLOAD */}
+                      {uploadProgress < 100 ? (
+                         <div className="mt-4 w-48 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden">
+                            <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                         </div>
+                      ) : (
+                         <p className="text-slate-500 text-sm mt-2">L'IA analyse et sépare la voix.</p>
+                      )}
+                      
+                      {uploadProgress < 100 && <p className="text-xs text-slate-400 mt-2">Envoi: {uploadProgress}%</p>}
                     </motion.div>
                   )}
 

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import Replicate from "replicate";
 
-// Configuration pour Vercel (App Router)
-export const maxDuration = 60; // On demande 60 secondes (le max gratuit)
-export const dynamic = 'force-dynamic';
+// On garde une durée max élevée pour les gros fichiers
+export const maxDuration = 60; 
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -11,45 +10,21 @@ const replicate = new Replicate({
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
+    // CHANGEMENT : On ne reçoit plus un fichier, mais une URL (texte)
+    const { fileUrl } = await request.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "Aucun fichier reçu" }, { status: 400 });
+    if (!fileUrl) {
+      return NextResponse.json({ error: "Aucune URL de fichier reçue" }, { status: 400 });
     }
 
-    // Vérification taille (Vercel limite à 4.5MB en gratuit sur le Body)
-    if (file.size > 4.5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "Fichier trop lourd pour la version démo (Max 4.5Mo). Essayez un fichier plus court." },
-        { status: 413 }
-      );
-    }
+    console.log("Traitement de l'URL :", fileUrl);
 
-    console.log(`Traitement : ${file.name} (${file.type})`);
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Détection type
-    let mimeType = file.type;
-    if (file.name.endsWith(".m4a")) mimeType = "audio/mp4";
-    if (file.name.endsWith(".mp3")) mimeType = "audio/mpeg";
-    if (file.name.endsWith(".wav")) mimeType = "audio/wav";
-    if (file.name.endsWith(".mp4")) mimeType = "video/mp4";
-    
-    const base64Input = buffer.toString("base64");
-    const dataURI = `data:${mimeType};base64,${base64Input}`;
-
-    console.log("Envoi à MP-SENet...");
-
-    // --- APPEL IA ---
+    // --- APPEL IA (MP-SENet) ---
     const output = await replicate.run(
-      // 👇 TON ID ICI
       "lucataco/mp-senet:de680605b626691a987a46d3c6b672cb411b9e9cca026cfcb946607165391087",
       {
         input: {
-          audio: dataURI,
+          audio: fileUrl, // L'IA télécharge directement depuis le lien Vercel Blob
         },
       }
     );
@@ -75,9 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ cleanedUrl: finalUrl });
 
   } catch (error: any) {
-    console.error("ERREUR SERVEUR:", error);
+    console.error("ERREUR :", error);
     return NextResponse.json(
-      { error: "Erreur : " + (error.message || String(error)) },
+      { error: "Erreur IA : " + (error.message || String(error)) },
       { status: 500 }
     );
   }
