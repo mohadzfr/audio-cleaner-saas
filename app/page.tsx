@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// AJOUT ICI : J'ai importé "Quote" pour la nouvelle section témoignages
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Quote } from "lucide-react";
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
 export default function Home() {
@@ -12,11 +11,10 @@ export default function Home() {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // --- GESTION DU SCROLL (NOUVELLE MÉTHODE FIABLE) ---
+  // --- GESTION DU SCROLL ---
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Utilisation de useMotionValueEvent pour une détection plus robuste
   useMotionValueEvent(scrollY, "change", (latest) => {
     const shouldBeScrolled = latest > 20;
     if (shouldBeScrolled !== isScrolled) {
@@ -66,10 +64,13 @@ export default function Home() {
     }
   };
 
+  // Helper pour savoir si c'est une vidéo
+  const isVideo = file?.type.startsWith('video');
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
-      {/* --- MODAL (MODIFIÉE : SANS L'ICÔNE ÉTOILE) --- */}
+      {/* --- MODAL --- */}
       <AnimatePresence>
       {showModal && (
         <motion.div 
@@ -81,16 +82,15 @@ export default function Home() {
              className="bg-white border border-slate-200 p-8 rounded-3xl max-w-sm w-full text-center relative shadow-2xl"
            >
               <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-600 transition-colors"><X className="w-5 h-5" /></button>
-              {/* J'ai retiré le bloc div avec l'icône Sparkles ici */}
               <h3 className="text-xl font-bold mb-2 text-slate-900 mt-4">Accès Pro Bientôt</h3>
-              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation. Laissez votre email pour être notifié.</p>
+              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation.</p>
               <button onClick={() => setShowModal(false)} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all">Compris</button>
            </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
 
-      {/* --- DYNAMIC ISLAND NAVBAR (Version Fluide & Stable) --- */}
+      {/* --- NAVBAR --- */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
           layout
@@ -123,8 +123,7 @@ export default function Home() {
           transition={{ type: "spring", stiffness: 200, damping: 30, mass: 0.8 }}
           className="flex items-center justify-between pointer-events-auto overflow-hidden"
         >
-            {/* LOGO */}
-            <div className="flex items-center gap-2 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+            <div className="flex items-center gap-3 font-bold text-lg tracking-tight cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
               <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-blue-500/20">
                 <AudioWaveform className="w-5 h-5 text-white" />
               </div>
@@ -136,7 +135,6 @@ export default function Home() {
               </motion.span>
             </div>
             
-            {/* MENU PC */}
             <motion.div 
               layout
               animate={{ opacity: isScrolled ? 0 : 1, display: isScrolled ? "none" : "flex" }} 
@@ -146,7 +144,6 @@ export default function Home() {
               <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600 transition-colors whitespace-nowrap">Tarifs</button>
             </motion.div>
 
-            {/* BOUTONS DROITE */}
             <div className="flex items-center gap-2 shrink-0">
               <button 
                  onClick={() => setShowModal(true)} 
@@ -154,7 +151,6 @@ export default function Home() {
               >
                 Connexion
               </button>
-              
               <motion.button 
                 layout
                 onClick={() => setShowModal(true)}
@@ -166,7 +162,7 @@ export default function Home() {
         </motion.nav>
       </div>
 
-      {/* --- HERO SECTION --- */}
+      {/* --- HERO --- */}
       <div className="relative pt-40 pb-32 px-6">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
@@ -183,7 +179,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]"
           >
-            Votre audio. <br/>
+            Votre audio.<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600">Parfaitement clair.</span>
           </motion.h1>
           
@@ -191,7 +187,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="text-xl text-slate-500 mb-16 max-w-2xl mx-auto leading-relaxed"
           >
-            Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Sans studio. Sans ingénieur.
+            Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Compatible Audio & Vidéo.
           </motion.p>
 
           {/* --- UPLOAD CARD --- */}
@@ -216,12 +212,16 @@ export default function Home() {
                       <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-100 group-hover/label:scale-110 group-hover/label:border-blue-300 group-hover/label:shadow-md transition-all duration-300">
                         <Upload className="w-8 h-8 text-slate-400 group-hover/label:text-blue-600" />
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">Glissez votre fichier audio</h3>
-                      <p className="text-slate-500 mb-8 text-sm">MP3, WAV, M4A (Max 50Mo)</p>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Glissez votre fichier</h3>
+                      <p className="text-slate-500 mb-8 text-sm font-medium">
+                        <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-md mr-2">Audio</span>
+                        <span className="bg-purple-50 text-purple-600 px-2 py-1 rounded-md">Vidéo</span>
+                      </p>
                       <div className="px-8 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5">
-                        Sélectionner un fichier
+                        Sélectionner
                       </div>
-                      <input type="file" accept="audio/*" onChange={handleFileChange} className="hidden" />
+                      {/* ACCEPT VIDEO AND AUDIO */}
+                      <input type="file" accept="audio/*,video/*" onChange={handleFileChange} className="hidden" />
                     </motion.label>
                   )}
 
@@ -233,7 +233,8 @@ export default function Home() {
                       className="w-full text-center z-10"
                     >
                       <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-blue-100 rounded-full mb-8 shadow-sm">
-                         <AudioWaveform className="w-4 h-4 text-blue-600"/>
+                         {/* Icône dynamique selon le type */}
+                         {isVideo ? <Video className="w-4 h-4 text-purple-600"/> : <FileAudio className="w-4 h-4 text-blue-600"/>}
                          <span className="text-slate-700 font-medium">{file.name}</span>
                       </div>
                       
@@ -242,7 +243,7 @@ export default function Home() {
                         className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                       >
                         <Bot className="w-5 h-5" />
-                        Nettoyer avec l'IA
+                        Nettoyer {isVideo ? 'la vidéo' : 'l\'audio'}
                       </button>
                       <button onClick={() => setFile(null)} className="mt-6 text-sm text-slate-500 hover:text-blue-600 transition-colors underline-offset-4 hover:underline">Annuler</button>
                     </motion.div>
@@ -257,6 +258,7 @@ export default function Home() {
                     >
                       <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
                       <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
+                      <p className="text-slate-500 text-sm mt-2">Extraction de la voix...</p>
                     </motion.div>
                   )}
 
@@ -277,13 +279,16 @@ export default function Home() {
                       </div>
 
                       <div className="flex gap-4">
-                        <a href={result} download="clean.wav" className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all text-center shadow-lg hover:-translate-y-0.5">
-                          Télécharger
+                        <a href={result} download={`clean-${file?.name.split('.')[0]}.wav`} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all text-center shadow-lg hover:-translate-y-0.5">
+                          Télécharger (WAV)
                         </a>
                         <button onClick={() => {setFile(null); setResult(null)}} className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-colors">
                           Nouveau
                         </button>
                       </div>
+                      {isVideo && (
+                          <p className="text-xs text-slate-400 mt-4">Note: Pour les vidéos, nous extrayons l'audio nettoyé.</p>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -301,13 +306,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- FEATURES (Colored) --- */}
+      {/* --- FEATURES --- */}
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes. Déposer votre audio buvez un vers d'eau et c'est prêt ", color: "text-amber-500", bg: "bg-amber-50" },
-            { icon: Bot, title: "IA DeepFilter", desc: "Suppression intelligente du bruit. Il ne restera que votre voix.", color: "text-blue-500", bg: "bg-blue-50" },
-            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers. Après traitement, aucun fichier est stocké sur notre serveur.", color: "text-green-500", bg: "bg-green-50" }
+            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-amber-500", bg: "bg-amber-50" },
+            { icon: Bot, title: "IA DeepFilter", desc: "Suppression intelligente du bruit.", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-green-500", bg: "bg-green-50" }
           ].map((feature, i) => (
             <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-200 transition-all duration-300 group hover:-translate-y-1">
               <div className={`w-12 h-12 rounded-2xl ${feature.bg} flex items-center justify-center mb-6 ${feature.color} group-hover:scale-110 transition-transform shadow-sm`}>
@@ -320,7 +325,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- PRICING (Colored) --- */}
+      {/* --- PRICING --- */}
       <div id="pricing" className="py-24 px-6 border-t border-slate-100 bg-slate-50/50">
          <div className="max-w-4xl mx-auto text-center">
              <h2 className="text-3xl font-bold text-slate-900 mb-16">Tarifs Simples</h2>
@@ -337,7 +342,7 @@ export default function Home() {
                      <button onClick={() => scrollToSection('upload')} className="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-blue-600 hover:text-blue-600 transition-all">Commencer</button>
                  </div>
 
-                 {/* PRO (Blue Gradient Card) */}
+                 {/* PRO */}
                  <div className="p-8 rounded-[2rem] bg-gradient-to-b from-blue-600 to-violet-900 text-white text-left relative shadow-2xl shadow-blue-900/30 transform hover:scale-[1.02] transition-all">
                      <div className="absolute top-0 right-0 bg-white/20 px-4 py-1 rounded-bl-2xl rounded-tr-[2rem] text-xs font-bold uppercase">Populaire</div>
                      <div className="text-blue-200 font-medium mb-2">Créateur Pro</div>
@@ -353,42 +358,8 @@ export default function Home() {
          </div>
       </div>
 
-      {/* --- NOUVELLE SECTION : CONFIANCE / TÉMOIGNAGES --- */}
-      <div className="py-24 px-6 bg-white border-t border-slate-100">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-12">Ils nous font confiance</h2>
-          <div className="grid md:grid-cols-2 gap-6 text-left">
-            {/* Témoignage 1 */}
-            <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm relative hover:border-blue-200 transition-all">
-              <Quote className="w-10 h-10 text-blue-100 absolute top-6 right-6" />
-              <p className="text-slate-700 mb-6 leading-relaxed text-lg">"C'est bluffant. J'ai sauvé une interview enregistrée dans un café bruyant. Le résultat est digne d'un studio."</p>
-              <div>
-                <div className="font-bold text-slate-900">Thomas L.</div>
-                <div className="text-sm text-blue-600">Podcasteur Indépendant</div>
-              </div>
-            </div>
-            {/* Témoignage 2 */}
-            <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm relative hover:border-blue-200 transition-all">
-              <Quote className="w-10 h-10 text-blue-100 absolute top-6 right-6" />
-              <p className="text-slate-700 mb-6 leading-relaxed text-lg">"Je gagne un temps fou sur le montage de mes vidéos YouTube. L'IA est incroyablement précise et rapide."</p>
-              <div>
-                <div className="font-bold text-slate-900">Sarah M.</div>
-                <div className="text-sm text-blue-600">Créatrice de Contenu</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Badges de confiance supplémentaires (Optionnel mais efficace) */}
-          <div className="mt-16 pt-12 border-t border-slate-100 flex flex-wrap justify-center gap-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-            <div className="flex items-center gap-2"><Shield className="w-5 h-5"/> Sécurisé</div>
-            <div className="flex items-center gap-2"><Zap className="w-5 h-5"/> Rapide</div>
-            <div className="flex items-center gap-2"><Bot className="w-5 h-5"/> IA Avancée</div>
-          </div>
-        </div>
-      </div>
-
       <footer className="py-12 text-center border-t border-slate-200 bg-white text-slate-500 text-sm">
-        <p>&copy; 2025 AudioFix AI. Fait avec soin en France.</p>
+        <p>&copy; 2025 AudioFix AI. Fait avec soin.</p>
       </footer>
     </div>
   );
