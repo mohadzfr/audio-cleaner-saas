@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio, Loader2 } from "lucide-react";
+import { Upload, Wand2, CheckCircle2, AudioWaveform, Zap, Shield, X, Sparkles, ArrowRight, Bot, Video, FileAudio } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { upload } from '@vercel/blob/client';
 
@@ -9,11 +9,14 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState(""); // Pour afficher l'étape en cours
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  
+  // Gestion de la progression
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
 
+  // --- GESTION DU SCROLL ---
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -24,66 +27,88 @@ export default function Home() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      // Limite théorique Blob (on met 300Mo pour être large)
+      if (selectedFile.size > 300 * 1024 * 1024) {
+        alert("Fichier trop lourd (>300Mo).");
+        return;
+      }
+      setFile(selectedFile);
       setError("");
       setResult(null);
       setUploadProgress(0);
+      setStatusMessage("");
       setTimeout(() => scrollToSection('player'), 500);
     }
   };
 
-  // --- LA NOUVELLE LOGIQUE DE POLLING ---
+  // --- LOGIQUE DE TRAITEMENT ASYNCHRONE (POLLING) ---
   const cleanAudio = async () => {
     if (!file) return;
     setLoading(true);
     setError("");
     setResult(null);
     setUploadProgress(0);
-    setStatusMessage("Envoi du fichier vers le Cloud...");
+    setStatusMessage("Préparation de l'envoi sécurisé...");
 
     try {
-      // 1. Upload Blob
+      // 1. Upload vers le Cloud (Vercel Blob)
       const newBlob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
-        onUploadProgress: (progressEvent) => setUploadProgress(progressEvent.percentage)
+        onUploadProgress: (progressEvent) => {
+           setUploadProgress(progressEvent.percentage);
+           setStatusMessage(`Envoi du fichier : ${progressEvent.percentage}%`);
+        }
       });
 
-      // 2. Lancer l'IA
-      setStatusMessage("Démarrage de l'IA...");
+      // 2. Lancement de l'IA
+      setStatusMessage("Démarrage du moteur IA Haute Qualité...");
       const startResponse = await fetch("/api/enhance", { 
         method: "POST", 
         body: JSON.stringify({ fileUrl: newBlob.url }) 
       });
       
-      if (!startResponse.ok) throw new Error("Impossible de lancer l'IA");
-      const { id } = await startResponse.json();
+      if (!startResponse.ok) throw new Error("Impossible de contacter l'IA.");
+      
+      const startData = await startResponse.json();
+      const predictionId = startData.id; // On récupère le ticket
 
-      // 3. Boucle d'attente (Polling)
-      setStatusMessage("Traitement en cours (ça peut prendre 1 min)...");
+      // 3. Boucle d'attente (Le Polling)
+      setStatusMessage("Traitement audio en cours (Qualité Studio)...");
       
       let finalOutput = null;
-      while (!finalOutput) {
-        // On attend 2 secondes
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // On demande "C'est fini ?"
-        const checkResponse = await fetch(`/api/enhance?id=${id}`);
-        const statusData = await checkResponse.json();
+      let attempts = 0;
 
-        if (statusData.status === "succeeded") {
-          finalOutput = statusData.output;
-        } else if (statusData.status === "failed" || statusData.status === "canceled") {
-          throw new Error("L'IA a échoué à traiter ce fichier.");
+      // On vérifie toutes les 2 secondes tant que ce n'est pas fini
+      while (!finalOutput) {
+        // Pause de 2 secondes
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+
+        // Petit message pour faire patienter si c'est long
+        if (attempts > 10) setStatusMessage("L'IA peaufine les détails...");
+        if (attempts > 30) setStatusMessage("Fichier complexe, encore un instant...");
+
+        // Vérification du statut
+        const checkResponse = await fetch(`/api/enhance?id=${predictionId}`);
+        const checkData = await checkResponse.json();
+
+        if (checkData.status === "succeeded") {
+          finalOutput = checkData.output;
+        } else if (checkData.status === "failed" || checkData.status === "canceled") {
+          throw new Error("L'IA n'a pas réussi à traiter ce fichier.");
         }
-        // Si c'est "starting" ou "processing", on continue la boucle
+        // Si status === "starting" ou "processing", la boucle continue
       }
 
-      // 4. Résultat
+      // 4. Affichage du résultat
       if (finalOutput) {
         let finalUrl = finalOutput;
-        // Conversion si c'est un objet/liste (cas rare avec cette méthode mais on sécurise)
-        if (typeof finalOutput === 'object') finalUrl = Array.isArray(finalOutput) ? finalOutput[0] : finalOutput.audio || finalOutput;
+        if (typeof finalOutput === 'object') {
+            // Parfois l'IA renvoie un objet ou une liste, on prend le bon lien
+            finalUrl = Array.isArray(finalOutput) ? finalOutput[0] : (finalOutput.audio || finalOutput.file || finalOutput);
+        }
         setResult(finalUrl);
       }
 
@@ -108,6 +133,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden w-full">
       
+      {/* --- MODAL (SANS ÉTOILE) --- */}
       <AnimatePresence>
       {showModal && (
         <motion.div 
@@ -119,14 +145,16 @@ export default function Home() {
              className="bg-white border border-slate-200 p-8 rounded-3xl max-w-sm w-full text-center relative shadow-2xl"
            >
               <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-600 transition-colors"><X className="w-5 h-5" /></button>
-              <h3 className="text-xl font-bold mb-2 text-slate-900 mt-4">Accès Pro Bientôt</h3>
-              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation.</p>
+              
+              <h3 className="text-xl font-bold mb-2 text-slate-900 mt-6">Accès Pro Bientôt</h3>
+              <p className="text-slate-500 mb-8 text-sm leading-relaxed">L'offre illimitée est en cours de finalisation. Revenez très vite.</p>
               <button onClick={() => setShowModal(false)} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all">Compris</button>
            </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
 
+      {/* --- DYNAMIC ISLAND NAVBAR (FLUIDE) --- */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-0 pointer-events-none">
         <motion.nav 
           layout
@@ -181,12 +209,24 @@ export default function Home() {
             </motion.div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => setShowModal(true)} className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3">Connexion</button>
-              <motion.button onClick={() => setShowModal(true)} layout className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap">S'inscrire</motion.button>
+              <button 
+                 onClick={() => setShowModal(true)} 
+                 className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors hidden sm:block px-3"
+              >
+                Connexion
+              </button>
+              <motion.button 
+                layout
+                onClick={() => setShowModal(true)}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 whitespace-nowrap"
+              >
+                S'inscrire
+              </motion.button>
             </div>
         </motion.nav>
       </div>
 
+      {/* --- HERO SECTION --- */}
       <div className="relative pt-40 pb-32 px-6">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#FAFAFA] to-[#FAFAFA] pointer-events-none"></div>
@@ -214,6 +254,7 @@ export default function Home() {
             Supprimez le bruit de fond instantanément grâce à l'IA.<br/> Compatible Audio & Vidéo.
           </motion.p>
 
+          {/* --- UPLOAD CARD --- */}
           <motion.div 
             id="upload"
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
@@ -225,6 +266,7 @@ export default function Home() {
               <div className="rounded-[1.5rem] bg-slate-50/50 border border-slate-100 p-8 md:p-12 min-h-[350px] flex flex-col items-center justify-center relative overflow-hidden transition-colors hover:border-blue-300">
                 
                 <AnimatePresence mode="wait">
+                  {/* ÉTAT 1 : UPLOAD */}
                   {!file && !loading && !result && (
                     <motion.label 
                       key="upload"
@@ -246,6 +288,7 @@ export default function Home() {
                     </motion.label>
                   )}
 
+                  {/* ÉTAT 2 : FICHIER SÉLECTIONNÉ */}
                   {file && !loading && !result && (
                     <motion.div 
                       key="file"
@@ -268,6 +311,7 @@ export default function Home() {
                     </motion.div>
                   )}
 
+                  {/* ÉTAT 3 : LOADING (BARRE DE PROGRESSION) */}
                   {loading && (
                     <motion.div 
                       key="loading"
@@ -275,22 +319,34 @@ export default function Home() {
                       className="text-center z-10"
                     >
                       <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
-                      <h3 className="text-lg font-bold text-slate-900">Traitement en cours...</h3>
                       
-                      {/* Indicateur de progression */}
-                      {uploadProgress < 100 ? (
-                         <div className="mt-4">
-                            <div className="w-48 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden">
-                               <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
-                            </div>
-                            <p className="text-xs text-slate-400 mt-2">Envoi: {uploadProgress}%</p>
-                         </div>
-                      ) : (
-                         <p className="text-slate-500 text-sm mt-2 animate-pulse">{statusMessage || "L'IA travaille..."}</p>
-                      )}
+                      {/* Status Dynamique */}
+                      <h3 className="text-lg font-bold text-slate-900 animate-pulse">
+                        {statusMessage || "Traitement en cours..."}
+                      </h3>
+                      
+                      {/* Barre de progression visuelle (Fake ou Réelle) */}
+                      <div className="mt-6 w-64 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden">
+                         <motion.div 
+                           className="h-full bg-blue-600"
+                           initial={{ width: "0%" }}
+                           animate={{ width: uploadProgress < 100 ? `${uploadProgress}%` : "100%" }}
+                           transition={{ duration: 0.5 }}
+                         />
+                         {/* Barre infinie si l'IA traite */}
+                         {uploadProgress === 100 && (
+                            <motion.div 
+                              className="h-full bg-blue-400 w-full absolute top-0 left-0"
+                              initial={{ x: "-100%" }}
+                              animate={{ x: "100%" }}
+                              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                            />
+                         )}
+                      </div>
                     </motion.div>
                   )}
 
+                  {/* ÉTAT 4 : RÉSULTAT */}
                   {result && (
                     <motion.div 
                       id="player"
@@ -336,8 +392,8 @@ export default function Home() {
       <div className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Ultra Rapide", desc: "Traitement en quelques secondes.", color: "text-amber-500", bg: "bg-amber-50" },
-            { icon: Bot, title: "IA MP-SENet", desc: "Séparation vocale de haute précision.", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Zap, title: "Qualité Studio", desc: "Le moteur MP-SENet préserve la voix naturelle.", color: "text-amber-500", bg: "bg-amber-50" },
+            { icon: Bot, title: "Audio & Vidéo", desc: "Compatible MP3, WAV, MP4, MOV jusqu'à 500Mo.", color: "text-blue-500", bg: "bg-blue-50" },
             { icon: Shield, title: "100% Privé", desc: "Suppression automatique des fichiers.", color: "text-green-500", bg: "bg-green-50" }
           ].map((feature, i) => (
             <div key={i} className="bg-white border border-slate-100 p-8 rounded-[2rem] hover:shadow-xl hover:border-blue-200 transition-all duration-300 group hover:-translate-y-1">
